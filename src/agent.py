@@ -2,6 +2,7 @@ import pygame
 from pygame.math import Vector2
 
 import random
+import math
 
 class Agent:
     def __init__(self, width, height):
@@ -14,7 +15,9 @@ class Agent:
         self.position = Vector2(random.randint(0, width), random.randint(0, height))
         self.velocity = Vector2(random.randint(-100, 100), random.randint(-100, 100))
         self.acceleration = Vector2(0.0, 0.0)
-        self.max_mag = 100
+        self.max_force = 100
+        self.max_mag = 300
+        self.max_velocity = 5
     
     def update(self, dt):
         """Update the agent position
@@ -23,7 +26,8 @@ class Agent:
             dt (float): delta time 
         """
         self.position += self.velocity * dt
-        self.velocity += self.acceleration * dt 
+        self.velocity += self.acceleration * dt
+        self.acceleration = Vector2(0.0, 0.0)
 
     
     def align(self, agents):
@@ -35,7 +39,7 @@ class Agent:
         Returns:
             Vector2: global direction to take in order for the agent to be align with the others
         """
-        fov = 50
+        fov = 1000
         average = Vector2(0.0, 0.0)
         total = 0
         
@@ -46,12 +50,13 @@ class Agent:
                 total += 1
 
         if total > 0 :
-            average = average / len(agents)
+            average = average / total
             
             # Setting magnitude to max to avoid standing still
             average = Vector2( average.x * self.max_mag / average.magnitude(), average.y * self.max_mag / average.magnitude())
 
             average -= self.velocity
+            average = self.limit(average, self.max_force)
         
         return average
     
@@ -64,19 +69,20 @@ class Agent:
         Returns:
             Vector2: global direction to take in order for the agent to join the others
         """
-        fov = 50
+        fov = 200
         average = Vector2(0.0, 0.0)
         total = 0
         
         for agent in agents:
             distance = self.position.distance_to(agent.position)
             if distance < fov and self.position != agent.position:
-                average += agent.velocity
+                average += agent.position
                 total += 1
 
         if total > 0 :
-            average = average / len(agents)
-            
+
+            average = average / total
+
             # Steering
             average -= self.position
             
@@ -84,6 +90,7 @@ class Agent:
             average = Vector2( average.x * self.max_mag / average.magnitude(), average.y * self.max_mag / average.magnitude())
             
             average -= self.velocity
+            average = self.limit(average, self.max_force)
         
         return average
     
@@ -117,3 +124,19 @@ class Agent:
             self.position.y = 0
         elif self.position.y < 0:
             self.position.y = height
+
+    def limit(self, vector: Vector2, n_max: int):
+        """[summary]
+
+        Args:
+            vector (Vector2): [description]
+            n_max (int): [description]
+
+        Returns:
+            Vector2: [description]
+        """
+        vx = vector.x
+        vy = vector.y
+        n = math.sqrt(vx**2 + vy**2)
+        f = min(n, n_max) / n
+        return Vector2(f*vx, f*vy)
