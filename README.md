@@ -27,3 +27,5 @@ Afin de lancer le programme :
 ```
 $ python src/game.py
 ```
+
+Les variables de fov dans chaque comportements des agents peuvent être changées afin d'observer des différences de déplacement.
