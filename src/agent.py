@@ -56,7 +56,6 @@ class Agent:
             )
 
             average -= self.velocity
-
         return average
 
     def cohesion(self, agents):
@@ -90,9 +89,6 @@ class Agent:
             )
 
             average -= self.velocity
-
-            # if average.magnitude() > self.max_force:
-            #     average = (average / average.magnitude()) * self.max_force
 
         return average
 
